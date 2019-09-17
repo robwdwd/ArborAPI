@@ -1,0 +1,30 @@
+{
+    "name": "robwdwd/ArborAPI",
+    "type": "library",
+    "description": "Arbor/Netscout SP/Siteline API class.",
+    "keywords": [
+        "arbor",
+        "netscout",
+        "ArborSP",
+        "networking",
+        "security",
+        "ddos"
+    ],
+    "homepage": "https://github.com/robwdwd/ArborAPI",
+    "license": "Apache-2.0",
+    "authors": [{
+        "name": "Rob Woodward",
+        "homepage": "https://github.com/robwdwd",
+        "email": "robwdwd@icloud.com",
+        "role": "Author"
+    }],
+    "autoload": {
+        "psr-4": {
+            "Arbor\\": "src/"
+        }
+    },
+    "require": {
+        "php": "^7.0",
+        "lib-curl": "*"
+    }
+}
