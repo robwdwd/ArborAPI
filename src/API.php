@@ -276,7 +276,7 @@ class API
         ];
 
         $queryXML = $this->buildQueryXML($filters, $startDate, $endDate);
-        $graphXML = $this->buildGraphXML('Traffic to AS'.$ASN, 'bps (-In / +Out)');
+        $graphXML = $this->buildGraphXML('Traffic to AS'.$ASN, 'bps (-In / +Out)', false, 986, 270);
 
         return $this->getTrafficGraph($queryXML, $graphXML);
     }
