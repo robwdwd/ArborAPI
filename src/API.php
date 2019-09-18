@@ -238,7 +238,7 @@ class API
     }
 
     /**
-     * Get Peer Managed object traffic graph from arbor SP.
+     * Get Peer Managed object traffic graph from arbor SP. This is a detail graph with in, out, total.
      *
      *
      * @param string $arborID   Arbor Managed Object ID
@@ -394,7 +394,7 @@ class API
      *
      * @return string returns a XML string used to configure the graph returned by the WS API
      */
-    private function buildGraphXML($title, $yLabel, $detail = false, $width = 900, $height = 200)
+    private function buildGraphXML($title, $yLabel, $detail = false, $width = 986, $height = 180)
     {
         $graphXML = '<?xml version="1.0" encoding="utf-8"?>
                           <peakflow version="2.0">

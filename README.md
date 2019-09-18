@@ -120,8 +120,8 @@ if ($image) {
 
 #### Example 2: Detail graph for a peer
 
-This example builds a detail style graph for a peer managed object containing data from the last week. It displays a graph
-item for in, out and total traffic. binby should be false for detail style traffic graphs.
+This example builds a detail style graph for a peer managed object containing data from the last week.
+It displays a graph item for in, out and total traffic. binby should be false for detail style traffic graphs.
 
 ```PHP
 $arborApi = new Arbor\API($configuration);
@@ -130,13 +130,14 @@ $filters = [
     ['type' => 'peer', 'value' => $arborID, 'binby' => false],
 ];
 
-// The last argument to the QueryXML build is for each class of traffic that should be retried (and displayed).
-// The array can contain: in, out, total, backbone and dropped. (see Arbor documentation for up-to-date class fields)
+// The last argument to the QueryXML build is for each class of traffic that should be
+// retried (and displayed). The array can contain: in, out, total, backbone and dropped.
+// See Arbor documentation for up-to-date class fields.
 //
 $queryXML = $this->buildQueryXML($filters, '7 days ago', 'now', 'bps', ['in', 'out', 'total']);
 
-// Build the graph, this time set the last argument 'detail' to true to get a detailed graph. Also set width to 800
-// and height to 150.
+// Build the graph, this time set the last argument 'detail' to true to get a detailed graph.
+// Also set width to 800 and height to 150.
 //
 $graphXML = $this->buildGraphXML('Peer traffic', 'bps', true, 800, 150);
 
