@@ -254,10 +254,10 @@ class API
             ['type' => 'peer', 'value' => $arborID, 'binby' => false],
         ];
 
-        $trafficXml = $this->buildQueryXML($filters, $startDate, $endDate, 'bps', ['in', 'out', 'total']);
-        $graphXml = $this->buildGraphXML($title, 'bps', true);
+        $queryXML = $this->buildQueryXML($filters, $startDate, $endDate, 'bps', ['in', 'out', 'total']);
+        $graphXML = $this->buildGraphXML($title, 'bps', true);
 
-        return $this->getTrafficGraph($trafficXml, $graphXml);
+        return $this->getTrafficGraph($queryXML, $graphXML);
     }
 
     /**
@@ -275,10 +275,10 @@ class API
             ['type' => 'aspath', 'value' => '_'.$ASN.'_', 'binby' => true],
         ];
 
-        $trafficXml = $this->buildQueryXML($filters, $startDate, $endDate);
-        $graphXml = $this->buildGraphXML('Traffic to AS'.$ASN, 'bps (-In / +Out)');
+        $queryXML = $this->buildQueryXML($filters, $startDate, $endDate);
+        $graphXML = $this->buildGraphXML('Traffic to AS'.$ASN, 'bps (-In / +Out)');
 
-        return $this->getTrafficGraph($trafficXml, $graphXml);
+        return $this->getTrafficGraph($queryXML, $graphXML);
     }
 
     /**
@@ -297,10 +297,10 @@ class API
             ['type' => 'interface', 'value' => $arborID, 'binby' => false],
         ];
 
-        $trafficXml = $this->buildQueryXML($filters, $startDate, $endDate, 'bps', ['in', 'out', 'total', 'dropped', 'backbone']);
-        $graphXml = $this->buildGraphXML($title, 'bps', true);
+        $queryXML = $this->buildQueryXML($filters, $startDate, $endDate, 'bps', ['in', 'out', 'total', 'dropped', 'backbone']);
+        $graphXML = $this->buildGraphXML($title, 'bps', true);
 
-        return $this->getTrafficGraph($trafficXml, $graphXml);
+        return $this->getTrafficGraph($queryXML, $graphXML);
     }
 
     /**
@@ -394,7 +394,7 @@ class API
      *
      * @return string returns a XML string used to configure the graph returned by the WS API
      */
-    private function buildGraphXML($title, $yLabel, $detail = false, $width = 900, $height = 180)
+    private function buildGraphXML($title, $yLabel, $detail = false, $width = 900, $height = 200)
     {
         $graphXML = '<?xml version="1.0" encoding="utf-8"?>
                           <peakflow version="2.0">
