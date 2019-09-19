@@ -354,39 +354,54 @@ class API
      *
      * @return string returns a XML string used to Query the WS API
      */
-    private function buildQueryXML($filters, $startDate = '7 days ago', $endDate = 'now', $unitType = 'bps', $classes = [])
+    public function buildQueryXML($filters, $startDate = '7 days ago', $endDate = 'now', $unitType = 'bps', $classes = [])
     {
-        $queryXML = '<?xml version="1.0" encoding="UTF-8"?>
-                        <peakflow version="2.0">
-                            <query type="traffic">
-                                <time end_ascii="'.$endDate.'" start_ascii="'.$startDate.'"/>
-                                <unit type="'.$unitType.'"/>
-                                <search timeout="30" limit="100"/>';
+        $queryXML = $this->getBaseXML();
+        $baseNode = $queryXML->firstChild;
 
+        // Create Query Node.
+        $queryNode = $queryXML->createElement('query');
+        $queryNode->setAttribute('type', 'traffic');
+        $baseNode->appendChild($queryNode);
+
+        // Create time Node.
+        $timeNode = $queryXML->createElement('time');
+        $timeNode->setAttribute('end_ascii', $endDate);
+        $timeNode->setAttribute('start_ascii', $startDate);
+        $queryNode->appendChild($timeNode);
+
+        // Create unit node.
+        $unitNode = $queryXML->createElement('unit');
+        $unitNode->setAttribute('type', $unitType);
+        $queryNode->appendChild($unitNode);
+
+        // Create search node.
+        $searchNode = $queryXML->createElement('search');
+        $searchNode->setAttribute('timeout', 30);
+        $searchNode->setAttribute('limit', 100);
+        $queryNode->appendChild($searchNode);
+
+        // Add the class nodes
         if (!empty($classes)) {
             foreach ($classes as $class) {
-                $queryXML .= '<class>'.$class.'</class>';
+                $classNode = $queryXML->createElement('class', $class);
+                $queryNode->appendChild($classNode);
             }
         }
 
-        if (count($filters) <= 2) {
+        // Add the filters.
+        if (!empty($filters)) {
             foreach ($filters as $filter) {
-                $queryXML .= '<filter type="'.$filter['type'].'"';
-                if (true === $filter['binby']) {
-                    $queryXML .= ' binby="1"';
+                if (isset($filter['type'])) {
+                    $filterNode = $this->addQueryFilter($filter, $queryXML);
+                    if ($filterNode) {
+                        $queryNode->appendChild($filterNode);
+                    }
                 }
-                $queryXML .= '>';
-                if (null !== $filter['value']) {
-                    $queryXML .= '<instance value="'.$filter['value'].'"/>';
-                }
-                $queryXML .= '</filter>';
             }
         }
 
-        $queryXML .= '      </query>
-                        </peakflow>';
-
-        return $queryXML;
+        return $queryXML->saveXML();
     }
 
     /**
@@ -400,24 +415,26 @@ class API
      *
      * @return string returns a XML string used to configure the graph returned by the WS API
      */
-    private function buildGraphXML($title, $yLabel, $detail = false, $width = 986, $height = 180)
+    public function buildGraphXML($title, $yLabel, $detail = false, $width = 986, $height = 180)
     {
-        $graphXML = '<?xml version="1.0" encoding="utf-8"?>
-                          <peakflow version="2.0">
-                              <graph id="graph1">
-                                  <title>'.$title.'</title>
-                                  <ylabel>'.$yLabel.'</ylabel>';
+        $graphXML = $this->getBaseXML();
+        $baseNode = $graphXML->firstChild;
+
+        $graphNode = $graphXML->createElement('graph');
+        $graphNode->setAttribute('id', 'graph1');
+        $baseNode->appendChild($graphNode);
+
+        $graphNode->appendChild($graphXML->createElement('title', $title));
+        $graphNode->appendChild($graphXML->createElement('ylabel', $yLabel));
+        $graphNode->appendChild($graphXML->createElement('width', $width));
+        $graphNode->appendChild($graphXML->createElement('height', $height));
+        $graphNode->appendChild($graphXML->createElement('legend', 1));
+
         if (true === $detail) {
-            $graphXML .= '            <type>detail</type>';
+            $graphNode->appendChild($graphXML->createElement('type', 'detail'));
         }
 
-        $graphXML .= '            <width>'.$width.'</width>
-                                  <height>'.$height.'</height>
-                                  <legend>1</legend>
-                              </graph>
-                          </peakflow>';
-
-        return $graphXML;
+        return $graphXML->saveXML();
     }
 
     /**
@@ -478,7 +495,7 @@ class API
     /**
      * Perform a Curl request against the API.
      *
-     * @return string the output of the API call, false otherwise
+     * @return string the output of the API call, null otherwise
      */
     private function doCurlREST($url, $type = 'GET', $postData = null)
     {
@@ -575,7 +592,51 @@ class API
     }
 
     /**
+     * Gets a base XML DOM document.
+     *
+     * @return object the DOM document to use as the base XML
+     */
+    private function getBaseXML()
+    {
+        $baseXML = new \DomDocument('1.0', 'UTF-8');
+        $baseXML->formatOutput = true;
+        $peakflowNode = $baseXML->createElement('peakflow');
+        $peakflowNode->setAttribute('version', '2.0');
+        $baseXML->appendChild($peakflowNode);
+
+        return $baseXML;
+    }
+
+    /**
+     * Get a Dom Element for use in the Query XML.
+     *
+     * @param array  $filter the filter array to build the filter node for the XML
+     * @param object $xmlDOM the DOMDocument object
+     *
+     * @return object the DOM element to include in the query XML
+     */
+    private function addQueryFilter($filter, $xmlDOM)
+    {
+        $filterNode = $xmlDOM->createElement('filter');
+        $filterNode->setAttribute('type', $filter['type']);
+
+        if (true === $filter['binby']) {
+            $filterNode->setAttribute('binby', 1);
+        }
+
+        if (null !== $filter['value']) {
+            $instanceNode = $xmlDOM->createElement('instance');
+            $instanceNode->setAttribute('value', $filter['value']);
+            $filterNode->appendChild($instanceNode);
+        }
+
+        return $filterNode;
+    }
+
+    /**
      * Find an error in the results of the REST API which gave an Error.
+     *
+     * @param array $errors an array of errors returned by the API
      */
     private function findError($errors)
     {
