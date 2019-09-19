@@ -331,10 +331,16 @@ class API
             return $output;
         }
 
-        // If we get here theres been an error on the graph.
+        // If we get here theres been an error on the graph. Errors usually come
+        // out as XML for traffic queries.
         //
-        $this->hasError = true;
-        $this->errorMessage = trim($output);
+        $outXML = new \SimpleXMLElement($output);
+        if ($outXML->error) {
+            foreach ($outXML->error as $error) {
+                $this->errorMessage .= (string) $error."\n";
+            }
+            $this->hasError = true;
+        }
     }
 
     /**
