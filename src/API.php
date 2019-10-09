@@ -300,7 +300,7 @@ class API
             ],
         ];
 
-        $dataString = json_encode($moJson);
+        $dataString = json_encode($ngJson);
 
         // Send the API request.
         //
