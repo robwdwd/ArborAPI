@@ -238,6 +238,76 @@ class API
     }
 
     /**
+     * Create a new managed object.
+     *
+     * @param string $name            Name of the managed object to create
+     * @param array  $emailAddresses  array of email addresses to add to the notification group
+     * @param object $extraAttributes Object for extra attributes to add to this notification group. See Arbor SDK Docs.
+     *
+     * @return object returns a json decoded object with the result
+     */
+    public function createNotificationGroup($name, $emailAddresses = null, $extraAttributes = null)
+    {
+        $url = $this->RestUrl.'/notification_groups/';
+
+        // Add in the required attributes for a notification group.
+        //
+        $requiredAttributes = ['name' => $name];
+
+        if (isset($emailAddresses)) {
+            $requiredAttributes['smtp_email_addresses'] = implode(',', $emailAddresses);
+        }
+
+        // Merge in extra attributes for this managed object
+        //
+        if (null === $extraAttributes) {
+            $attributes = $requiredAttributes;
+        } else {
+            $attributes = array_merge($requiredAttributes, $extraAttributes);
+        }
+
+        // Create the full managed object data to be converted to json.
+        //
+        $ngJson = [
+            'data' => [
+                'attributes' => $attributes,
+            ],
+        ];
+
+        $dataString = json_encode($ngJson);
+
+        // Send the API request.
+        //
+        return $this->doCurlREST($url, 'POST', $dataString);
+    }
+
+    /**
+     * Change a notification group.
+     *
+     * @param string $arborID    notification group ID to change
+     * @param string $attributes attributes to change on the notifciation group
+     *                           See Arbor API documentation for a full list of attributes
+     *
+     * @return object returns a json decoded object with the result
+     */
+    public function changeNotificationGroup($arborID, $attributes)
+    {
+        $url = $this->RestUrl.'/notification_groups/'.$arborID;
+
+        $ngJson = [
+            'data' => [
+                'attributes' => $attributes,
+            ],
+        ];
+
+        $dataString = json_encode($moJson);
+
+        // Send the API request.
+        //
+        return $this->doCurlREST($url, 'PATCH', $dataString);
+    }
+
+    /**
      * Get Peer Managed object traffic graph from arbor SP. This is a detail graph with in, out, total.
      *
      *
