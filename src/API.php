@@ -170,7 +170,7 @@ class API
             $relationships = [
                 'shared_host_detection_settings' => [
                     'data' => [
-                        'type' => 'shared_host_detection_setting',
+                        'type' => 'shared_host_detection_settings',
                         'id' => '1',
                     ],
                 ],
