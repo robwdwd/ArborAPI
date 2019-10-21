@@ -146,8 +146,6 @@ class API
         return $this->findRest('managed_objects', $field, $search, $perPage);
     }
 
-
-
     /**
      * Create a new managed object.
      *
@@ -239,20 +237,19 @@ class API
         return $this->doCurlREST($url, 'PATCH', $dataString);
     }
 
-
-        /**
-         * Gets multiple notification Groups with optional search.
-         *
-         * @param string $field   Field to search.
-         * @param string $search  search string to match against
-         * @param int    $perPage Number of pages to get from the server at a time. Default 50.
-         *
-         * @return string Returns a json string with the records from the API
-         */
-        public function getNotificationGroups($field = null, $search = null, $perPage = 50)
-        {
-            return $this->findRest('notification_groups', $field, $search, $perPage);
-        }
+    /**
+     * Gets multiple notification Groups with optional search.
+     *
+     * @param string $field   field to search
+     * @param string $search  search string to match against
+     * @param int    $perPage Number of pages to get from the server at a time. Default 50.
+     *
+     * @return string Returns a json string with the records from the API
+     */
+    public function getNotificationGroups($field = null, $search = null, $perPage = 50)
+    {
+        return $this->findRest('notification_groups', $field, $search, $perPage);
+    }
 
     /**
      * Create a new managed object.
