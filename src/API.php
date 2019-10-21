@@ -85,7 +85,7 @@ class API
         //
         // Work out the number of pages.
         //
-        if (isset($apiResult['links'])) {
+        if (isset($apiResult['links']['last'])) {
             parse_str(parse_url($apiResult['links']['last'])['query'], $parsed);
             $totalPages = $parsed['page'];
         }
