@@ -163,15 +163,20 @@ class API
     {
         $url = $this->RestUrl.'/managed_objects/';
 
-        // Use the default detection settings in relationship unless
+        // Disable host detection settings in relationship unless
         // this has been overridden by the relationships argument.
         //
         if (null === $relationships) {
             $relationships = [
                 'shared_host_detection_settings' => [
                     'data' => [
+<<<<<<< HEAD
                         'type' => 'shared_host_detection_settings',
                         'id' => '1',
+=======
+                        'type' => 'shared_host_detection_setting',
+                        'id' => '0',
+>>>>>>> master
                     ],
                 ],
             ];
@@ -217,10 +222,11 @@ class API
      * @param string $arborID    managed object ID to change
      * @param string $attributes Attributes to change on the managed object.
      *                           See Arbor API documentation for a full list of attributes.
+     * @param object $relationships   Object for relationships to this managed object. See Arbor SDK Docs.
      *
      * @return object returns a json decoded object with the result
      */
-    public function changeManagedObject($arborID, $attributes)
+    public function changeManagedObject($arborID, $attributes, $relationships = null)
     {
         $url = $this->RestUrl.'/managed_objects/'.$arborID;
 
@@ -229,6 +235,10 @@ class API
                 'attributes' => $attributes,
             ],
         ];
+
+        if ($relationships !== null) {
+            $moJson['data']['relationships'] = $relationships;
+        }
 
         $dataString = json_encode($moJson);
 
