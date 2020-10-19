@@ -44,6 +44,8 @@ class API
      *
      * @param string endpoint Type of object to get. managed_object etc
      * @param string id   object ID
+     * @param mixed $endpoint
+     * @param mixed $arborID
      *
      * @return object returns a json decoded object with the result
      */
@@ -54,18 +56,18 @@ class API
 
     /**
      * Find or search Arbor SP REST API for a particular record or set of
-     * records. This wraps around the full api. API doesn't have a filter/searh
-     * so we have to simulate it.
+     * records.
      *
-     * @param string $endpoint endpoint type, Managed Object, Mitigations etc.
-     *                         See Arbor API documenation for endpoint list.
-     * @param string $field    Fields to search on, i.e. name, id.
-     * @param string $search   search value to match on $field
-     * @param int    $perPage  limit the number of returned objects per page
+     * @param string     $endpoint endpoint type, Managed Object, Mitigations etc.
+     *                             See Arbor API documenation for endpoint list.
+     * @param string     $field    Fields to search on, i.e. name, id.
+     * @param string     $search   search value to match on $field
+     * @param int        $perPage  limit the number of returned objects per page
+     * @param mixed|null $filters
      *
      * @return string returns a json string with the records from the API
      */
-    public function findRest($endpoint, $field = null, $search = null, $perPage = 50)
+    public function findRest($endpoint, $filters = null, $perPage = 50)
     {
         $result = [];
         $currentPage = 1;
@@ -74,7 +76,7 @@ class API
         // Do inital REST call to the API, this helps determin the number of
         // pages in the result.
         //
-        $apiResult = $this->doPagedRESTCall($endpoint, $perPage, 1);
+        $apiResult = $this->doPagedRESTCall($endpoint, $filters, $perPage, 1);
 
         // If there is an error return here.
 
@@ -95,25 +97,15 @@ class API
         //
         while (true) {
             foreach ($apiResult['data'] as $r) {
-                // If searching on a partucular field check for match.
-                //
-                if (null !== $field) {
-                    if (isset($r['attributes'][$field])) {
-                        if ($r['attributes'][$field] == $search) {
-                            $result[] = $r;
-                        }
-                    }
-                } else {
-                    // Store result from API in results.
-                    $result[] = $r;
-                }
+                // Store result from API in results.
+                $result[] = $r;
             }
             ++$currentPage;
             // Break out of the loop when we have done the last page.
             if ($currentPage > $totalPages) {
                 break;
             }
-            $apiResult = $this->doPagedRESTCall($endpoint, $perPage, $currentPage);
+            $apiResult = $this->doPagedRESTCall($endpoint, $filters, $perPage, $currentPage);
 
             // Check for an error but don't return here in case some results
             // have already been found.
@@ -135,15 +127,14 @@ class API
     /**
      * Gets multiple managed objects with optional search fields.
      *
-     * @param string $field   AS number to search for
-     * @param string $search  search string to match against
+     * @param string $filters Filters
      * @param int    $perPage Number of pages to get from the server at a time. Default 50.
      *
      * @return string Returns a json string with the records from the API
      */
-    public function getManagedObjects($field = null, $search = null, $perPage = 50)
+    public function getManagedObjects($filters = null, $perPage = 50)
     {
-        return $this->findRest('managed_objects', $field, $search, $perPage);
+        return $this->findRest('managed_objects', $filters, $perPage);
     }
 
     /**
@@ -214,10 +205,10 @@ class API
     /**
      * Change a managed object.
      *
-     * @param string $arborID    managed object ID to change
-     * @param string $attributes Attributes to change on the managed object.
-     *                           See Arbor API documentation for a full list of attributes.
-     * @param object $relationships   Object for relationships to this managed object. See Arbor SDK Docs.
+     * @param string $arborID       managed object ID to change
+     * @param string $attributes    Attributes to change on the managed object.
+     *                              See Arbor API documentation for a full list of attributes.
+     * @param object $relationships Object for relationships to this managed object. See Arbor SDK Docs.
      *
      * @return object returns a json decoded object with the result
      */
@@ -231,7 +222,7 @@ class API
             ],
         ];
 
-        if ($relationships !== null) {
+        if (null !== $relationships) {
             $moJson['data']['relationships'] = $relationships;
         }
 
@@ -245,15 +236,14 @@ class API
     /**
      * Gets multiple notification Groups with optional search.
      *
-     * @param string $field   field to search
-     * @param string $search  search string to match against
+     * @param string $filters Filters
      * @param int    $perPage Number of pages to get from the server at a time. Default 50.
      *
      * @return string Returns a json string with the records from the API
      */
-    public function getNotificationGroups($field = null, $search = null, $perPage = 50)
+    public function getNotificationGroups($filters, $perPage = 50)
     {
-        return $this->findRest('notification_groups', $field, $search, $perPage);
+        return $this->findRest('notification_groups', $filters, $perPage);
     }
 
     /**
@@ -329,7 +319,6 @@ class API
     /**
      * Get Peer Managed object traffic graph from arbor SP. This is a detail graph with in, out, total.
      *
-     *
      * @param string $arborID   Arbor Managed Object ID
      * @param string $title     Title of the graph
      * @param string $startDate Start date for the graph
@@ -355,6 +344,7 @@ class API
      * @param string $ASnum     AS number
      * @param string $startDate Start date for the graph
      * @param string $endDate   End date for the graph
+     * @param mixed  $ASN
      *
      * @return string returns a PNG image
      */
@@ -394,7 +384,6 @@ class API
 
     /**
      * Get traffic graph from arbor SP using the web services API.
-     *
      *
      * @param string $queryXML Query XML string
      * @param string $graphXML Graph format XML string
@@ -501,6 +490,7 @@ class API
      * @param bool   $detail sets the graph to be a detail graph type when true
      * @param int    $width  graph width
      * @param int    $width  graph height
+     * @param mixed  $height
      *
      * @return string returns a XML string used to configure the graph returned by the WS API
      */
@@ -529,8 +519,9 @@ class API
     /**
      * Do a API call to Arbor REST API to get a single object by ID.
      *
-     * @param string $endpint Endpoint to query. See Arbor API documentation for endpoint list.
-     * @param int    $arborID ID of the endpoint to find
+     * @param string $endpint  Endpoint to query. See Arbor API documentation for endpoint list.
+     * @param int    $arborID  ID of the endpoint to find
+     * @param mixed  $endpoint
      *
      * @return object returns a json decoded object with the records from the API
      */
@@ -544,18 +535,28 @@ class API
     /**
      * Do a paged API call to Arbor REST API. This gets one page of results at a time.
      *
-     * @param string $endpint Endpoint to query. See Arbor API documentation for endpoint list.
-     * @param string $perPage number of records to get
-     * @param string $page    start record
+     * @param string $endpint  Endpoint to query. See Arbor API documentation for endpoint list.
+     * @param string $perPage  number of records to get
+     * @param string $page     start record
+     * @param mixed  $endpoint
+     * @param mixed  $filters
      *
      * @return object returns a json decoded object with the records from the API
      */
-    public function doPagedRESTCall($endpoint, $perPage = 50, $page = null)
+    public function doPagedRESTCall($endpoint, $filters, $perPage = 50, $page = null)
     {
         $url = $this->RestUrl.$endpoint.'/?perPage='.$perPage;
 
         if (null !== $page) {
             $url .= '&page='.$page;
+        }
+
+        if (null !== $filters) {
+            $filterUrl = $this->filterToUrl($filters);
+
+            if ($filterUrl) {
+                $url .= '&'.$filterUrl;
+            }
         }
 
         return $this->doCurlREST($url);
@@ -585,6 +586,10 @@ class API
      * Perform a Curl request against the API.
      *
      * @return string the output of the API call, null otherwise
+     *
+     * @param mixed      $url
+     * @param mixed      $type
+     * @param mixed|null $postData
      */
     private function doCurlREST($url, $type = 'GET', $postData = null)
     {
@@ -648,6 +653,8 @@ class API
      * Perform a Curl request against the Web Services API.
      *
      * @return string the output of the API call, null otherwise
+     *
+     * @param mixed $url
      */
     private function doCurlWS($url)
     {
@@ -720,6 +727,33 @@ class API
         }
 
         return $filterNode;
+    }
+
+    private function filterToUrl($filters)
+    {
+        // One filter  ?filter=a/name.eq.test1
+        // Two filters ?filter[]=a/name.eq.test1&filter[]=a/subtype.eq.test_type
+        // Two filters with multiple values    ?filter[]=a/name.eq.test1|test2&filter[]=a/subtype.eq.test_type1|test_type2
+
+        // ['type', 'field', 'search', 'operator']
+
+        if (isset($filters['type'])) {
+            return 'filter='.$filters['type'].'/'.$filters['field'].'.'.$filters['operator'].'.'.urlencode($filters['search']);
+        }
+        $filterArgs = [];
+
+        foreach ($filters as $filter) {
+            if ('eq' !== $filter['operator'] and 'cn' !== $filter['operator']) {
+                continue;
+            }
+
+            if ('a' !== $filter['type'] and 'r' !== $filter['type']) {
+                continue;
+            }
+            $filterArgs[] = 'filter[]='.$filter['type'].'/'.$filter['field'].'.'.$filter['operator'].'.'.urlencode($filter['search']);
+        }
+
+        return implode('&', $filterArgs);
     }
 
     /**
