@@ -234,6 +234,120 @@ class API
     }
 
     /**
+     * Gets multiple mitigation templates with optional search fields.
+     *
+     * @param string $filters Filters
+     * @param int    $perPage Number of pages to get from the server at a time. Default 50.
+     *
+     * @return string Returns a json string with the records from the API
+     */
+    public function getMitigationTemplates($filters = null, $perPage = 50)
+    {
+        return $this->findRest('mitigation_templates', $filters, $perPage);
+    }
+
+    public function copyMitigationTemplate($templateID, $name, $description)
+    {
+        $existingTemplate = $this->getByID('mitigation_templates', $templateID);
+
+        if ($this->hasError) {
+            return;
+        }
+
+        $out = $this->createMitigationTemplate(
+            $name,
+            $existingTemplate['data']['attributes']['ip_version'],
+            $description,
+            $existingTemplate['data']['attributes']['subobject'],
+            $existingTemplate['data']['relationships'],
+            $existingTemplate['data']['attributes']['subtype']
+        );
+
+        return $out;
+    }
+
+    /**
+     * Create a new mitigation template.
+     *
+     * @param string $name            Name of the mitigation template to create
+     * @param string $ipVersion       IP Version of the mitigation template
+     * @param object $relationships   Object for relationships to this mitigation template. See Arbor SDK Docs.
+     * @param object $extraAttributes Object for extra attributes to add to this mitigation template. See Arbor SDK Docs.
+     * @param mixed  $description
+     * @param mixed  $countermeasures
+     * @param mixed  $subtype
+     *
+     * @return object returns a json decoded object with the result
+     */
+    public function createMitigationTemplate(
+        $name,
+        $ipVersion,
+        $description,
+        $countermeasures,
+        $relationships = [],
+        $subtype = 'tms'
+    ) {
+        $url = $this->RestUrl.'/mitigation_templates/';
+
+        // Add in the required attributes for a managed object.
+        //
+        $attributes = [
+            'name' => $name,
+            'ip_version' => $ipVersion,
+            'description' => $description,
+            'subtype' => $subtype,
+            'subobject' => $countermeasures,
+        ];
+
+        // Create the full mitigation template data to be converted to json.
+        //
+        $moJson = [
+            'data' => [
+                'attributes' => $attributes,
+                'relationships' => $relationships,
+                'type' => 'mitigation_template',
+            ],
+        ];
+
+        $dataString = json_encode($moJson);
+
+        // Send the API request.
+        //
+        return $this->doCurlREST($url, 'POST', $dataString);
+    }
+
+    /**
+     * Change a mitigation template.
+     *
+     * @param string $arborID       mitigation template ID to change
+     * @param string $attributes    Attributes to change on the managed object.
+     *                              See Arbor API documentation for a full list of attributes.
+     * @param object $relationships Object for relationships to this managed object. See Arbor SDK Docs.
+     *
+     * @return object returns a json decoded object with the result
+     */
+    public function changeMitigationTemplate($arborID, $attributes, $relationships = null)
+    {
+        $url = $this->RestUrl.'/mitigation_templates/'.$arborID;
+
+        $moJson = [
+            'data' => [
+                'attributes' => $attributes,
+            ],
+        ];
+
+        if (null !== $relationships) {
+            $moJson['data']['relationships'] = $relationships;
+        }
+
+        $dataString = json_encode($moJson);
+
+        // Send the API request.
+        //
+        return $this->doCurlREST($url, 'PATCH', $dataString);
+    }
+
+    /**
      * Gets multiple notification Groups with optional search.
      *
      * @param string $filters Filters
